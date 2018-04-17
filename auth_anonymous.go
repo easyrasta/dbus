@@ -1,21 +1,17 @@
 package dbus
 
-import (
-)
 
-// AuthAnonymous returns an Auth that authenticates with the ANONYMOUS mechanism
+// AuthAnonymous returns an Auth that uses the ANONYMOUS mechanism.
 func AuthAnonymous() Auth {
-	return authAnonymous{}
+	return &authAnonymous{}
 }
 
-// AuthAnonymous implements the ANONYMOUS authentication mechanism.
-type authAnonymous struct {
+type authAnonymous struct{}
+
+func (a *authAnonymous) FirstData() (name, resp []byte, status AuthStatus) {
+	return []byte("ANONYMOUS"), nil, AuthOk
 }
 
-func (a authAnonymous) FirstData() ([]byte, []byte, AuthStatus) {
-	return []byte("ANONYMOUS"), []byte(""), AuthOk
-}
-
-func (a authAnonymous) HandleData(b []byte) ([]byte, AuthStatus) {
+func (a *authAnonymous) HandleData(data []byte) (resp []byte, status AuthStatus) {
 	return nil, AuthError
 }
