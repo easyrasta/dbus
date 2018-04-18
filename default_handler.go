@@ -5,6 +5,8 @@ import (
 	"reflect"
 	"strings"
 	"sync"
+
+	log "github.com/sirupsen/logrus"
 )
 
 func newIntrospectIntf(h *defaultHandler) *exportedIntf {
@@ -240,8 +242,16 @@ func (sh *defaultSignalHandler) DeliverSignal(intf, name string, signal *Signal)
 		sh.RLock()
 		defer sh.RUnlock()
 		if sh.closed {
+			log.WithFields(log.Fields{
+				"interface": intf,
+				"name":  name,
+			}).Warning("Discard signal. Handler closed")
 			return
 		}
+		log.WithFields(log.Fields{
+			"interface": intf,
+			"name":  name,
+		}).Debug("DeliverSignal")
 		for _, ch := range sh.signals {
 			ch <- signal
 		}
@@ -269,6 +279,7 @@ func (sh *defaultSignalHandler) addSignal(ch chan<- *Signal) {
 	sh.Lock()
 	defer sh.Unlock()
 	if sh.closed {
+		log.Warning("Could not add signal. Handler closed")
 		return
 	}
 	sh.signals = append(sh.signals, ch)
@@ -279,6 +290,7 @@ func (sh *defaultSignalHandler) removeSignal(ch chan<- *Signal) {
 	sh.Lock()
 	defer sh.Unlock()
 	if sh.closed {
+		log.Warning("Could not remove signal. Handler closed")
 		return
 	}
 	for i := len(sh.signals) - 1; i >= 0; i-- {

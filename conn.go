@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"strings"
 	"sync"
+	log "github.com/sirupsen/logrus"
 )
 
 var (
@@ -255,6 +256,11 @@ func (conn *Conn) Hello() error {
 func (conn *Conn) inWorker() {
 	for {
 		msg, err := conn.ReadMessage()
+		log.WithFields(log.Fields{
+			"message": msg,
+			"error":  err,
+		}).Debug("Read message")
+
 		if err != nil {
 			if _, ok := err.(InvalidMessageError); !ok {
 				// Some read error occured (usually EOF); we can't really do
@@ -282,6 +288,10 @@ func (conn *Conn) inWorker() {
 			!conn.names.uniqueNameIsKnown() ||
 			conn.names.isKnownName(dest)
 		if !found {
+			log.WithFields(log.Fields{
+				"dest": dest,
+				"message": msg,
+			}).Warning("Drop message")
 			// Eavesdropped a message, but no channel for it is registered.
 			// Ignore it.
 			continue
